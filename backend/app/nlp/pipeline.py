@@ -9,6 +9,7 @@ from app.nlp.relation_extractor import extract_relations
 
 # Загружаем модель один раз при старте приложения
 nlp = spacy.load("en_core_web_lg")
+# nlp = spacy.load("ru_core_news_lg")
 
 
 def process_text(text: str) -> Dict[str, List[Dict]]:

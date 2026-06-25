@@ -1,29 +1,44 @@
 """FastAPI application entry point."""
 
 import logging
+from asyncio import get_running_loop
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from app.config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+from app.config import settings
 from app.db.graph_repository import GraphRepository
+from app.exceptions import AppException, EmptyTextError, NlpProcessingError, Neo4jConnectionError
 from app.nlp.pipeline import process_text
 
+import logging
+import os
+from pathlib import Path
+
+# Создаём директорию для логов, если её нет
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+# Настраиваем корневой логгер
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),                     # консоль
+        logging.FileHandler(LOG_DIR / "app.log", encoding="utf-8"),  # файл
+    ],
 )
 logger = logging.getLogger(__name__)
 
-# Глобальный репозиторий
 repo: GraphRepository | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global repo
-    repo = GraphRepository(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
+    repo = GraphRepository(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
     try:
         await repo.init_constraints()
         logger.info("Connected to Neo4j")
@@ -39,6 +54,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="BioGraph Nexus API", version="0.1.0", lifespan=lifespan)
 
 
+@app.exception_handler(AppException)
+async def app_exception_handler(request: Request, exc: AppException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message},
+    )
+
+
 class ExtractRequest(BaseModel):
     text: str
 
@@ -52,21 +75,20 @@ class ExtractResponse(BaseModel):
 @app.post("/extract", response_model=ExtractResponse)
 async def extract(request: ExtractRequest):
     if not request.text.strip():
-        raise HTTPException(status_code=422, detail="Text must not be empty")
+        raise EmptyTextError()
 
     try:
-        from asyncio import get_running_loop
         loop = get_running_loop()
         result = await loop.run_in_executor(None, process_text, request.text)
-    except Exception:
+    except Exception as exc:
         logger.exception("NLP processing failed")
-        raise HTTPException(status_code=500, detail="NLP processing error")
+        raise NlpProcessingError(str(exc))
 
     try:
         graph_id = await repo.save_graph(result["entities"], result["relations"])
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to save graph to Neo4j")
-        raise HTTPException(status_code=500, detail="Database error")
+        raise Neo4jConnectionError(str(exc))
 
     return ExtractResponse(
         entities=result["entities"],

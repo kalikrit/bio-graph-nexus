@@ -60,3 +60,85 @@ class GraphRepository:
 
         logger.info("Graph saved, graph_id=%s", graph_id)
         return graph_id or ""
+    
+    async def get_graph(self, graph_id: str | None = None) -> Dict[str, List[Dict]]:
+        """
+        Возвращает все узлы и связи графа.
+        Если graph_id передан, возвращает только связанные с ним сущности.
+        """
+        async with self.driver.session() as session:
+            if graph_id:
+                # Извлекаем подграф от указанного узла
+                result = await session.run("""
+                    MATCH (e:Entity {entity_id: $graph_id})-[r]-(neighbor)
+                    RETURN e AS node, r AS relationship, neighbor AS related_node
+                """, graph_id=graph_id)
+                nodes = {}
+                edges = []
+                async for record in result:
+                    e = record["node"]
+                    neighbor = record["related_node"]
+                    rel = record["relationship"]
+                    # Добавляем центральный узел
+                    nodes[e["entity_id"]] = {
+                        "data": {
+                            "id": e["entity_id"],
+                            "label": e["name"],
+                            "type": e["type"],
+                        }
+                    }
+                    # Добавляем соседа
+                    nodes[neighbor["entity_id"]] = {
+                        "data": {
+                            "id": neighbor["entity_id"],
+                            "label": neighbor["name"],
+                            "type": neighbor["type"],
+                        }
+                    }
+                    edges.append({
+                        "data": {
+                            "source": rel.start_node["entity_id"],
+                            "target": rel.end_node["entity_id"],
+                            "label": rel.type,
+                        }
+                    })
+                return {"nodes": list(nodes.values()), "edges": edges}
+            else:
+                # Возвращаем весь граф (может быть большим, но для демо ок)
+                result = await session.run("""
+                    MATCH (e:Entity)
+                    OPTIONAL MATCH (e)-[r]-(other:Entity)
+                    RETURN e AS node, r AS relationship, other AS related_node
+                """)
+                nodes = {}
+                edges = []
+                async for record in result:
+                    node = record["node"]
+                    if node["entity_id"] not in nodes:
+                        nodes[node["entity_id"]] = {
+                            "data": {
+                                "id": node["entity_id"],
+                                "label": node["name"],
+                                "type": node["type"],
+                            }
+                        }
+                    if record["relationship"] and record["related_node"]:
+                        rel = record["relationship"]
+                        other = record["related_node"]
+                        if other["entity_id"] not in nodes:
+                            nodes[other["entity_id"]] = {
+                                "data": {
+                                    "id": other["entity_id"],
+                                    "label": other["name"],
+                                    "type": other["type"],
+                                }
+                            }
+                        edges.append({
+                            "data": {
+                                "source": rel.start_node["entity_id"],
+                                "target": rel.end_node["entity_id"],
+                                "label": rel.type,
+                            }
+                        })
+                return {"nodes": list(nodes.values()), "edges": edges}
+                

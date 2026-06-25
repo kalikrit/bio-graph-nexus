@@ -1,10 +1,22 @@
-"""Application configuration loaded from environment variables."""
+"""Application configuration via Pydantic Settings."""
 
-import os
-from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()  # загружает переменные из .env в корне проекта
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+
+class Settings(BaseSettings):
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "password"
+    spacy_model: str = "en_core_web_lg"
+
+    model_config = SettingsConfigDict(
+        # Путь к .env в корне проекта: backend/app/config.py -> ../../.env
+        env_file=str(Path(__file__).resolve().parent.parent.parent / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+settings = Settings()
