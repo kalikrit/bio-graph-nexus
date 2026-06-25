@@ -53,6 +53,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="BioGraph Nexus API", version="0.1.0", lifespan=lifespan)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # или ["*"] для теста
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
@@ -65,6 +74,8 @@ async def app_exception_handler(request: Request, exc: AppException):
 class ExtractRequest(BaseModel):
     text: str
 
+class RecommendResponse(BaseModel):
+    recommendations: list[dict]
 
 class ExtractResponse(BaseModel):
     entities: list[dict]
@@ -95,3 +106,17 @@ async def extract(request: ExtractRequest):
         relations=result["relations"],
         graph_id=graph_id,
     )
+    
+class RecommendResponse(BaseModel):
+    recommendations: list[dict]
+
+
+@app.get("/recommend", response_model=RecommendResponse)
+async def recommend(entity_id: str):
+    try:
+        recs = await repo.recommend_similar_persons(entity_id)
+    except Exception as exc:
+        logger.exception("Failed to get recommendations")
+        raise Neo4jConnectionError(str(exc))
+
+    return RecommendResponse(recommendations=recs)

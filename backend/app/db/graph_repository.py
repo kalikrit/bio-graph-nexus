@@ -141,4 +141,32 @@ class GraphRepository:
                             }
                         })
                 return {"nodes": list(nodes.values()), "edges": edges}
-                
+
+    async def recommend_similar_persons(self, entity_id: str, limit: int = 5) -> List[Dict]:
+        """
+        Находит персон, у которых больше всего общих организаций/мест с заданной.
+        Возвращает список словарей с name, entity_id, weight.
+        """
+        async with self.driver.session() as session:
+            result = await session.run("""
+                MATCH (e:Entity {entity_id: $entity_id})
+                WHERE e.type = 'PERSON'
+                MATCH (e)-[r1]-(common:Entity)-[r2]-(other:Entity)
+                WHERE other.type = 'PERSON' AND other.entity_id <> $entity_id
+                  AND type(r1) = type(r2)
+                WITH other, count(DISTINCT common) AS shared_count
+                RETURN other.name AS name, other.entity_id AS entity_id, shared_count AS weight
+                ORDER BY weight DESC
+                LIMIT $limit
+            """, entity_id=entity_id, limit=limit)
+
+            recommendations = []
+            async for record in result:
+                recommendations.append({
+                    "name": record["name"],
+                    "entity_id": record["entity_id"],
+                    "weight": record["weight"],
+                })
+            return recommendations
+        
+                        

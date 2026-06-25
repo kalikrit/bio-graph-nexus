@@ -12,7 +12,12 @@ VERB_PATTERNS = {
     "join": ("PERSON", {"ORG"}),
     "work": ("PERSON", {"ORG", "PERSON"}),
     "live": ("PERSON", {"GPE"}),
-    "bear": ("PERSON", {"GPE"}),               # was born → лемма "bear"
+    "marry": ("PERSON", {"PERSON"}),
+    "befriend": ("PERSON", {"PERSON"}),
+    "divorce": ("PERSON", {"PERSON"}),
+    "bear": ("PERSON", {"GPE"}), 
+    "co": ("PERSON", {"ORG"}),
+    "co-found": ("PERSON", {"ORG"}),
     "die": ("PERSON", {"GPE"}),
     "study": ("PERSON", {"ORG"}),
     "attend": ("PERSON", {"ORG"}),
