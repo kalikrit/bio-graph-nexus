@@ -1,7 +1,11 @@
 <template>
   <div id="app">
     <h1>BioGraph Nexus</h1>
-    <TextInput ref="textInput" @submit="handleSubmit" />
+    <TextInput
+     ref="textInput" 
+     @submit="handleSubmit" 
+     @clear="handleClear" 
+    />
     <div v-if="error" class="error">{{ error }}</div>
     <div class="main-layout" v-if="graphData">
       <GraphView
@@ -15,6 +19,7 @@
       :edges="graphData.edges"
       :nodes="graphData.nodes"
       @recommend="onRecommend"
+      @close="selectedNode = null"
       ref="sidebar"
     />
     </div>
@@ -61,15 +66,24 @@ async function handleSubmit(text) {
   }
 }
 
+function handleClear() {
+  graphData.value = null
+  error.value = ''
+  selectedNode.value = null
+}
+
 function onNodeClick(nodeData) {
-  selectedNode.value = { data: nodeData }   // оборачиваем, чтобы EntitySidebar видел node.data
+  selectedNode.value = { data: nodeData }
+  if (sidebar.value) {
+    sidebar.value.clearRecommendations()
+  }
 }
 
 async function onRecommend(entityId) {
   if (!sidebar.value) return
   sidebar.value.setLoading(true)
+  sidebar.value.setRecommendations([])
   try {
-    // Временная заглушка — позже заменим на реальный запрос
     const response = await axios.get(`http://localhost:8000/recommend?entity_id=${entityId}`)
     sidebar.value.setRecommendations(response.data.recommendations)
   } catch (err) {

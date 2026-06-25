@@ -1,5 +1,6 @@
 <template>
   <div v-if="node" class="sidebar">
+    <button class="close-btn" @click="$emit('close')">✕</button>
     <h3>{{ node.data.label }}</h3>
     <p><strong>Тип:</strong> {{ node.data.type }}</p>
     <div v-if="relatedEdges.length">
@@ -16,7 +17,7 @@
     <div v-if="recommendations.length" class="recommendations">
       <strong>Похожие люди:</strong>
       <ul>
-        <li v-for="rec in recommendations" :key="rec.id">{{ rec.label }} (общих связей: {{ rec.weight }})</li>
+        <li v-for="rec in recommendations" :key="rec.id">{{ rec.name }} (общих связей: {{ rec.weight }})</li>
       </ul>
     </div>
   </div>
@@ -66,8 +67,11 @@ function formatEdge(edge) {
 
 function setLoading(val) { loading.value = val }
 function setRecommendations(recs) { recommendations.value = recs }
+function clearRecommendations() {
+  recommendations.value = []
+}
 
-defineExpose({ setLoading, setRecommendations })
+defineExpose({ setLoading, setRecommendations, clearRecommendations })
 </script>
 
 <style scoped>
@@ -84,6 +88,22 @@ defineExpose({ setLoading, setRecommendations })
   font-family: Arial, sans-serif;
   max-height: 80vh;
   overflow-y: auto;
+}
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+.close-btn:hover {
+  color: #333;
 }
 button {
   margin-top: 12px;

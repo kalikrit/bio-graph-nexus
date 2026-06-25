@@ -39,10 +39,23 @@ const examples = [
   {
     label: 'Мария Кюри',
     text: 'Marie Curie was born in Warsaw. She studied at the Sorbonne and discovered radium with Pierre Curie.'
+  },
+  {
+    label: 'Четыре товарища',
+    text: `John befriend of Mark.
+Steve befriend of John.
+Elton befriend of Steve.
+John was married to Martha.
+Mark married Lucy.
+Mark divorced Lucy.
+Mark married Erika.
+Erika befriended Martha.
+Steve befriended Erika.
+Elton married to Sarah.`
   }
 ]
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(['submit','clear'])
 
 function handleSubmit() {
   if (!text.value.trim() || loading.value) return
@@ -52,6 +65,7 @@ function handleSubmit() {
 
 function loadExample(exampleText) {
   text.value = exampleText
+  emit('clear')
 }
 
 // метод для сброса состояния загрузки снаружи
