@@ -57,7 +57,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # или ["*"] для теста
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # адреса фронтенда
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
