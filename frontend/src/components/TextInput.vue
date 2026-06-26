@@ -34,7 +34,7 @@ const loading = ref(false)
 const examples = [
   {
     label: 'Стив Джобс',
-    text: 'Steve Jobs founded Apple Inc. in Cupertino on April 1, 1976. He later worked at Pixar and NeXT.'
+    text: 'Steve Jobs founded Apple Inc. in Cupertino on April 1, 1976. He later worked at Pixar and NeXT Computer'
   },
   {
     label: 'Мария Кюри',
@@ -45,13 +45,14 @@ const examples = [
     text: `John befriend of Mark.
 Steve befriend of John.
 Elton befriend of Steve.
-John was married to Martha.
+John got married to Martha in 1996.
 Mark married Lucy.
-Mark divorced Lucy.
+Mark divorced Lucy. Lucy passed away in 1996.
 Mark married Erika.
 Erika befriended Martha.
 Steve befriended Erika.
-Elton married to Sarah.`
+Elton married to Sarah.
+Elton and Sarah had a son named Mike in 1996.`
   }
 ]
 

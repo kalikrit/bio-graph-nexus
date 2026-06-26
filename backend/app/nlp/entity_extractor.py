@@ -3,7 +3,6 @@
 from hashlib import md5
 from typing import Dict, List
 
-import spacy
 from spacy.tokens import Doc
 
 
@@ -36,8 +35,15 @@ def extract_entities(doc: Doc) -> List[Dict]:
     if current_ent:
         entities.append(current_ent)
 
-    # Фильтруем только нужные типы
-    allowed_types = {"PERSON", "ORG", "GPE", "DATE"}
+    # Фильтруем только нужные типы (расширенный набор для биографий)
+    allowed_types = {
+        "PERSON", "ORG", "GPE", "DATE",
+        "WORK_OF_ART",   # книги, фильмы, картины
+        "EVENT",         # соревнования, конференции
+        "FAC",           # здания, аэропорты
+        "PRODUCT",       # автомобили, оружие
+        "LAW",           # законы, постановления
+    }
     entities = [e for e in entities if e["type"] in allowed_types]
 
     # Добавляем entity_id
@@ -63,7 +69,6 @@ def normalize_entity_name(name: str, type_: str) -> str:
     for suffix in suffixes:
         if name.endswith(suffix):
             name = name[:-len(suffix)].strip()
-    # Убираем точки в конце, если остались
     name = name.rstrip(".")
     return f"{name}::{type_}"
 
