@@ -20,49 +20,54 @@
 |------|------------|
 | **Бэкенд** | Python 3.12, FastAPI, spaCy, Neo4j (драйвер 5.x), Pydantic, Poetry |
 | **Фронтенд** | Vue 3, Vite, Cytoscape.js, Axios |
-| **Инфраструктура** | Docker (Neo4j), docker-compose |
+| **Инфраструктура** | Docker (Neo4j), docker-compose, Makefile |
 | **NLP** | en_core_web_lg (легко переключается на другие модели) |
 
 ## Быстрый старт (локальная разработка)
 
-### 1. Клонирование репозитория
+### 0. Предварительные требования
+- **Docker** (для запуска Neo4j)
+- **Python 3.12** и **Poetry**
+- **Node.js 20** и **npm**
+
+### 1. Клонирование и настройка
 ```bash
 git clone <url-вашего-репозитория>
 cd bio-graph-nexus
-```
-
-### 2. Запуск Neo4j через Docker
-```bash
-docker compose up -d neo4j
-```
-База доступна по адресу `bolt://localhost:7687`, веб-интерфейс: http://localhost:7474.
-
-Создайте файл `.env` из примера и задайте пароль:
-```bash
 cp .env.example .env
-# отредактируйте .env, установив NEO4J_PASSWORD
+# отредактируйте .env: укажите свой пароль для Neo4j (NEO4J_PASSWORD)
 ```
 
-### 3. Бэкенд
+### 2. Установка зависимостей (один раз)
 ```bash
-cd backend
-poetry install
-poetry run spacy download en_core_web_lg
+cd backend && poetry install && poetry run spacy download en_core_web_lg && cd ..
+cd frontend && npm install && cd ..
 ```
-Запустите сервер:
-```bash
-poetry run uvicorn app.main:app --reload
-```
-Swagger-документация: http://localhost:8000/docs.
 
-### 4. Фронтенд
-В другом терминале из корня проекта:
+### 3. Запуск всего проекта
 ```bash
-cd frontend
-npm install
-npm run dev
+make run-all
 ```
-Приложение откроется на http://localhost:5173.
+Дождитесь сообщения `Все сервисы запущены!`.
+
+- Фронтенд: http://localhost:5173
+- Бэкенд Swagger: http://localhost:8000/docs
+- Neo4j Browser: http://localhost:7474
+
+### 4. Остановка
+```bash
+make stop
+```
+
+## Управление сервисами (Makefile)
+
+| Команда | Действие |
+|---------|----------|
+| `make run-all` | Запустить Neo4j (Docker), бэкенд и фронтенд |
+| `make stop` | Остановить все сервисы |
+| `make run-neo4j` | Только Neo4j |
+| `make run-backend` | Только бэкенд |
+| `make run-frontend` | Только фронтенд |
 
 ## Использование
 
