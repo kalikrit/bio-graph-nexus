@@ -48,13 +48,14 @@ const examples = [
     text: `John befriend of Mark.
 Steve befriend of John.
 Elton befriended of Steve.
-John was married to Martha.
+John got married to Martha in 1996.
 Mark married Lucy.
-Mark divorced Lucy.
+Mark divorced Lucy. Lucy passed away in 1996.
 Mark married Erika.
 Erika befriended Martha.
 Steve befriended Erika.
-Elton married to Sarah.`
+Elton married to Sarah.
+Elton and Sarah had a son named Mike in 1996.`
   }
 ]
 
