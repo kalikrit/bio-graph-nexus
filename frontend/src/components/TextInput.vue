@@ -5,6 +5,7 @@
       placeholder="Вставьте текст биографии..."
       rows="8"
       :disabled="loading"
+      @input="activeExample = null"
     ></textarea>
     <div class="controls">
       <button @click="handleSubmit" :disabled="loading || !text.trim()">
@@ -15,7 +16,8 @@
         <button
           v-for="ex in examples"
           :key="ex.label"
-          @click="loadExample(ex.text)"
+          :class="{ active: ex.label === activeExample }"
+          @click="loadExample(ex)"
           :disabled="loading"
         >
           {{ ex.label }}
@@ -30,11 +32,12 @@ import { ref } from 'vue'
 
 const text = ref('')
 const loading = ref(false)
+const activeExample = ref(null)
 
 const examples = [
   {
     label: 'Стив Джобс',
-    text: 'Steve Jobs founded Apple Inc. in Cupertino on April 1, 1976. He later worked at Pixar and NeXT Computer'
+    text: 'Steve Jobs founded Apple Inc. in Cupertino on April 1, 1976. He later worked at Pixar and NeXT Computer.'
   },
   {
     label: 'Мария Кюри',
@@ -44,32 +47,32 @@ const examples = [
     label: 'Четыре товарища',
     text: `John befriend of Mark.
 Steve befriend of John.
-Elton befriend of Steve.
-John got married to Martha in 1996.
+Elton befriended of Steve.
+John was married to Martha.
 Mark married Lucy.
-Mark divorced Lucy. Lucy passed away in 1996.
+Mark divorced Lucy.
 Mark married Erika.
 Erika befriended Martha.
 Steve befriended Erika.
-Elton married to Sarah.
-Elton and Sarah had a son named Mike in 1996.`
+Elton married to Sarah.`
   }
 ]
 
-const emit = defineEmits(['submit','clear'])
+const emit = defineEmits(['submit', 'clear'])
 
 function handleSubmit() {
   if (!text.value.trim() || loading.value) return
   loading.value = true
+  // больше не сбрасываем activeExample, чтобы выделение сохранялось
   emit('submit', text.value)
 }
 
-function loadExample(exampleText) {
-  text.value = exampleText
+function loadExample(ex) {
+  text.value = ex.text
+  activeExample.value = ex.label
   emit('clear')
 }
 
-// метод для сброса состояния загрузки снаружи
 function setLoading(value) {
   loading.value = value
 }
@@ -131,5 +134,10 @@ button:disabled {
 }
 .examples button:hover:not(:disabled) {
   background-color: #d3d9df;
+}
+.examples button.active {
+  background-color: #357abd;
+  color: white;
+  border: 2px solid #1e5a8a;
 }
 </style>
