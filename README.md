@@ -7,10 +7,10 @@
 ## Скриншоты
 
 ### Интерфейс ввода текста
-![Интерфейс BioGraph Nexus](docs/images/interface.png)
+![Интерфейс BioGraph Nexus](images/interface.png)
 
 ### Построенный граф знаний
-![Граф знаний](docs/images/graph.png)
+![Граф знаний](images/graph.png)
 
 ## Ключевые возможности
 
