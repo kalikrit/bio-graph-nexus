@@ -29,14 +29,13 @@ import { computed, ref } from 'vue'
 const props = defineProps({
   node: Object,
   edges: Array,
-  nodes: Array   // <-- новый prop: все узлы графа
+  nodes: Array
 })
-const emit = defineEmits(['recommend'])
+const emit = defineEmits(['recommend', 'close'])
 
 const loading = ref(false)
 const recommendations = ref([])
 
-// Словарь для быстрого поиска имени по id
 const nodeMap = computed(() => {
   const map = {}
   if (props.nodes) {
@@ -67,18 +66,13 @@ function formatEdge(edge) {
 
 function setLoading(val) { loading.value = val }
 function setRecommendations(recs) { recommendations.value = recs }
-function clearRecommendations() {
-  recommendations.value = []
-}
+function clearRecommendations() { recommendations.value = [] }
 
 defineExpose({ setLoading, setRecommendations, clearRecommendations })
 </script>
 
 <style scoped>
 .sidebar {
-  position: fixed;
-  right: 20px;
-  top: 80px;
   width: 280px;
   background: #fff;
   border: 1px solid #ccc;
@@ -88,6 +82,7 @@ defineExpose({ setLoading, setRecommendations, clearRecommendations })
   font-family: Arial, sans-serif;
   max-height: 80vh;
   overflow-y: auto;
+  position: relative;  /* для кнопки закрытия */
 }
 .close-btn {
   position: absolute;

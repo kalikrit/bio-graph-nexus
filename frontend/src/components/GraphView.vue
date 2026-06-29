@@ -86,6 +86,54 @@ function renderGraph() {
         }
     },
     {
+      selector: 'node[type="WORK_OF_ART"]',
+      style: {
+        'background-color': '#fcf8e3',   // светло‑жёлтый
+        'shape': 'rectangle',
+        'label': 'data(label)',
+        'color': '#333',                 // тёмный текст
+        'font-size': '13px',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'text-outline-color': '#fff',    // белая обводка
+        'text-outline-width': 3,
+        'border-width': 1,
+        'border-color': '#aaa',
+      }
+    },
+    {
+      selector: 'node[type="FAC"]',
+      style: {
+        'background-color': '#d9b3ff',   // светло-фиолетовый
+        'shape': 'rectangle',
+        'label': 'data(label)',
+        'color': '#2d004d',              // очень тёмный текст
+        'font-size': '13px',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'text-outline-color': '#ffffff',
+        'text-outline-width': 2,
+        'border-width': 1,
+        'border-color': '#8e44ad',
+      }
+    },
+    {
+      selector: 'node[type="PRODUCT"]',
+      style: {
+        'background-color': '#ffb6c1',   // розовый
+        'shape': 'rectangle',
+        'label': 'data(label)',
+        'color': '#4d0026',              // тёмный бордовый текст
+        'font-size': '13px',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'text-outline-color': '#ffffff',
+        'text-outline-width': 2,
+        'border-width': 1,
+        'border-color': '#c71585',
+      }
+    },
+    {
         selector: 'edge',
         style: {
         'width': 2,

@@ -1,4 +1,15 @@
-"""Relation extraction using dependency parsing and verb patterns."""
+"""Relation extraction using dependency parsing and verb patterns.
+
+Features:
+- Strict verb patterns for key biography verbs
+- Greedy mode for any verb between named entities
+- Prepositional links for places and dates (in, at, on, from, to)
+- Compound subjects and objects (A and B, C and D)
+- Copula handling (be, become) via attribute constructions
+- Birth verb handling (have, bear, father, mother)
+- Pronoun resolution (he, she, they)
+- Subtree search for nested entities
+"""
 
 from typing import Dict, List, Optional
 
@@ -12,7 +23,7 @@ VERB_PATTERNS = {
     "join": ("PERSON", {"ORG"}),
     "work": ("PERSON", {"ORG", "PERSON"}),
     "live": ("PERSON", {"GPE"}),
-    "bear": ("PERSON", {"GPE"}),
+    "bear": ("PERSON", {"GPE"}),               # was born → лемма "bear"
     "die": ("PERSON", {"GPE"}),
     "study": ("PERSON", {"ORG"}),
     "attend": ("PERSON", {"ORG"}),
@@ -74,6 +85,7 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
         prev_person = last_person
         persons_in_sent = [ent.text for ent in sent.ents if ent.label_ == "PERSON"]
 
+        # --- Verb-based relations ---
         for token in sent:
             if token.pos_ not in ("VERB", "AUX"):
                 continue
@@ -103,7 +115,7 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
 
             subjects = _collect_all_subjects(token)
 
-            # Поиск первого объекта
+            # Object search (direct, prepositional, attribute, etc.)
             obj = next((child for child in token.children if child.dep_ in ("dobj", "pobj")), None)
             if not obj:
                 for child in token.children:
@@ -129,12 +141,10 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
                 if dobj_token:
                     obj = dobj_token
 
-            if not obj and not subjects:
-                continue
-            if not obj:
+            if not obj or not subjects:
                 continue
 
-            # Собираем все сочинённые объекты (conj) для obj
+            # Conjoined objects
             obj_tokens = [obj]
             for child in obj.children:
                 if child.dep_ == "conj":
@@ -143,11 +153,7 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
             for subj in subjects:
                 subj_ent = _find_entity_by_position(entities, subj.idx)
                 if not subj_ent and subj.text.lower() in {"he", "she", "they"} and prev_person:
-                    subj_ent = next(
-                        (e for e in entities if e["name"] == prev_person and e["type"] == "PERSON"),
-                        None,
-                    )
-
+                    subj_ent = next((e for e in entities if e["name"] == prev_person and e["type"] == "PERSON"), None)
                 if not subj_ent:
                     continue
 
@@ -158,43 +164,26 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
                     if not obj_ent:
                         continue
 
-                    # Проверка типов и добавление связи
                     if is_greedy or is_copula or is_birth:
                         if subj_ent["type"] in ("PERSON", "ORG", "GPE") and obj_ent["type"] in obj_types:
                             relations.append({
-                                "subject": {
-                                    "name": subj_ent["name"],
-                                    "type": subj_ent["type"],
-                                    "entity_id": subj_ent["entity_id"],
-                                },
+                                "subject": {"name": subj_ent["name"], "type": subj_ent["type"], "entity_id": subj_ent["entity_id"]},
                                 "relation": lemma,
-                                "object": {
-                                    "name": obj_ent["name"],
-                                    "type": obj_ent["type"],
-                                    "entity_id": obj_ent["entity_id"],
-                                },
+                                "object": {"name": obj_ent["name"], "type": obj_ent["type"], "entity_id": obj_ent["entity_id"]},
                             })
                     else:
                         if subj_ent["type"] == subj_type and obj_ent["type"] in obj_types:
                             relations.append({
-                                "subject": {
-                                    "name": subj_ent["name"],
-                                    "type": subj_ent["type"],
-                                    "entity_id": subj_ent["entity_id"],
-                                },
-                                "relation": token.lemma_,
-                                "object": {
-                                    "name": obj_ent["name"],
-                                    "type": obj_ent["type"],
-                                    "entity_id": obj_ent["entity_id"],
-                                },
+                                "subject": {"name": subj_ent["name"], "type": subj_ent["type"], "entity_id": subj_ent["entity_id"]},
+                                "relation": lemma,
+                                "object": {"name": obj_ent["name"], "type": obj_ent["type"], "entity_id": obj_ent["entity_id"]},
                             })
 
-        # Предложные связи (места и даты)
+        # --- Prepositional links (places & dates) ---
         for token in sent:
             if token.pos_ != "ADP" or token.lemma_ not in PREPOSITION_LEMMAS:
                 continue
-            obj = next((child for child in token.children if child.dep_ == "pobj"), None)
+            obj = next((child for child in token.children if child.dep_ in ("pobj", "obl")), None)
             if not obj:
                 continue
             obj_ent = _find_entity_by_position(entities, obj.idx)
@@ -203,26 +192,15 @@ def extract_relations(doc: Doc, entities: List[Dict]) -> List[Dict]:
             current_person = persons_in_sent[-1] if persons_in_sent else None
             if not current_person:
                 continue
-            subj_ent = next(
-                (e for e in entities if e["name"] == current_person and e["type"] == "PERSON"),
-                None,
-            )
+            subj_ent = next((e for e in entities if e["name"] == current_person and e["type"] == "PERSON"), None)
             if not subj_ent:
                 continue
             if obj_ent["type"] not in {"GPE", "LOC", "DATE"}:
                 continue
             relations.append({
-                "subject": {
-                    "name": subj_ent["name"],
-                    "type": subj_ent["type"],
-                    "entity_id": subj_ent["entity_id"],
-                },
+                "subject": {"name": subj_ent["name"], "type": subj_ent["type"], "entity_id": subj_ent["entity_id"]},
                 "relation": token.lemma_,
-                "object": {
-                    "name": obj_ent["name"],
-                    "type": obj_ent["type"],
-                    "entity_id": obj_ent["entity_id"],
-                },
+                "object": {"name": obj_ent["name"], "type": obj_ent["type"], "entity_id": obj_ent["entity_id"]},
             })
 
         if persons_in_sent:

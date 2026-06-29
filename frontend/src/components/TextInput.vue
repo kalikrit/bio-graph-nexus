@@ -44,6 +44,25 @@ const examples = [
     text: 'Marie Curie was born in Warsaw. She studied at the Sorbonne and discovered radium with Pierre Curie.'
   },
   {
+    label: 'George Boole',
+    text: `George Boole was born in Lincoln on 2 November 1815.
+George Boole established his own school at the age of 19.
+George Boole served as the first professor of mathematics at Queen's College in Cork.
+George Boole met Mary Everest at Queen's College.
+George Boole developed Boolean algebra in 1847.
+George Boole wrote the book 'The Laws of Thought' in 1854.
+George Boole wrote 'Treatise on Differential Equations'.
+George Boole wrote 'The Mathematical Analysis of Logic'.
+George Boole collaborated with Charles Sanders Peirce.
+George Boole collaborated with William Stanley Jevons.
+Claude Shannon applied Boolean algebra to electrical relay systems.
+Victor Shestakov applied Boolean algebra to digital circuits.
+George Boole received the Royal Society's gold prize for mathematics.
+George Boole won the Keith Medal.
+George Boole won honorary degrees from the Universities of Dublin and Oxford.
+George Boole died of pneumonia on 8 December 1864.`
+  },
+  {
     label: 'Четыре товарища',
     text: `John befriend of Mark.
 Steve befriend of John.
@@ -78,7 +97,7 @@ function setLoading(value) {
   loading.value = value
 }
 
-defineExpose({ setLoading })
+defineExpose({ setLoading, text })
 </script>
 
 <style scoped>

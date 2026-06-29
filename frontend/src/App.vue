@@ -1,11 +1,7 @@
 <template>
   <div id="app">
     <h1>BioGraph Nexus</h1>
-    <TextInput
-     ref="textInput" 
-     @submit="handleSubmit" 
-     @clear="handleClear" 
-    />
+    <TextInput ref="textInput" @submit="handleSubmit" />
     <div v-if="error" class="error">{{ error }}</div>
     <div class="main-layout" v-if="graphData">
       <GraphView
@@ -13,15 +9,19 @@
         @node-click="onNodeClick"
         ref="graphView"
       />
-    <EntitySidebar
-      v-if="selectedNode"
-      :node="selectedNode"
-      :edges="graphData.edges"
-      :nodes="graphData.nodes"
-      @recommend="onRecommend"
-      @close="selectedNode = null"
-      ref="sidebar"
-    />
+    </div>
+    <!-- Правая фиксированная панель: информация о персоне + история -->
+    <div class="side-panel">
+      <EntitySidebar
+        v-if="selectedNode"
+        :node="selectedNode"
+        :edges="graphData?.edges ?? []"
+        :nodes="graphData?.nodes ?? []"
+        @recommend="onRecommend"
+        @close="selectedNode = null"
+        ref="sidebar"
+      />
+      <HistorySidebar ref="historySidebar" @select-history="onSelectHistory" />
     </div>
   </div>
 </template>
@@ -32,10 +32,12 @@ import axios from 'axios'
 import TextInput from './components/TextInput.vue'
 import GraphView from './components/GraphView.vue'
 import EntitySidebar from './components/EntitySidebar.vue'
+import HistorySidebar from './components/HistorySidebar.vue'
 
 const textInput = ref(null)
 const graphView = ref(null)
 const sidebar = ref(null)
+const historySidebar = ref(null)
 const error = ref('')
 const graphData = ref(null)
 const selectedNode = ref(null)
@@ -58,18 +60,18 @@ async function handleSubmit(text) {
       }
     }))
     graphData.value = { nodes, edges }
+
+    if (historySidebar.value) {
+      historySidebar.value.addItem(text)
+    }
   } catch (err) {
     console.error(err)
     error.value = err.response?.data?.detail || 'Неизвестная ошибка при обработке'
   } finally {
-    if (textInput.value) textInput.value.setLoading(false)
+    if (textInput.value) {
+      textInput.value.setLoading(false)
+    }
   }
-}
-
-function handleClear() {
-  graphData.value = null
-  error.value = ''
-  selectedNode.value = null
 }
 
 function onNodeClick(nodeData) {
@@ -92,6 +94,12 @@ async function onRecommend(entityId) {
     sidebar.value.setLoading(false)
   }
 }
+
+function onSelectHistory(text) {
+  if (textInput.value) {
+    textInput.value.text = text
+  }
+}
 </script>
 
 <style>
@@ -107,5 +115,14 @@ body { margin: 0; font-family: Arial, sans-serif; }
 .main-layout {
   display: flex;
   gap: 20px;
+}
+.side-panel {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 100;
 }
 </style>
